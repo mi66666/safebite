@@ -54,6 +54,7 @@ Three independent suites, all runnable from a clean checkout:
 npm test        # 36 unit tests (logic + crypto), zero dependencies, no browser
 npm run check   # 16 end-to-end checks in a 390×844 mobile viewport via CDP
 npm run a11y    # accessibility audit: 18 page-audits across 4 display modes
+npm run perf    # load measurements under 4x CPU throttling and Fast 3G
 ```
 
 | Suite | Checks | What it proves |
@@ -61,6 +62,7 @@ npm run a11y    # accessibility audit: 18 page-audits across 4 display modes
 | Unit (`tests/`) | 29 passing | GS1 check digits against real products, UPC-A padding, rejected checksums, allergen alias matching (`en:hazelnuts` → tree nuts), traces-vs-contains, ingredient-text fallback for entries with no allergen declaration (including coconut-milk and cocoa-butter exclusions), dietary flags, AES-GCM round-trip, wrong-key rejection, tamper detection, constant-time compare |
 | End-to-end (`tools/cdp-check.mjs`) | 14 passing | Registration, encrypted profile, live Open Food Facts lookup, history persistence, service worker activation, text scaling, high contrast, invalid barcode handling, and **genuine offline behaviour** (network disabled via `Network.emulateNetworkConditions`) |
 | Accessibility (`tools/a11y-audit.mjs`) | 0 violations | Touch targets ≥ 44 px, accessible names, image alternatives, heading order, landmarks, WCAG contrast (4.5:1 / 3:1), horizontal overflow — measured in light, dark, high-contrast and 160 % text modes |
+| Performance (`tools/perf-check.mjs`) | measured | first contentful paint 1.26 s cold / 72 ms warm under 4× CPU throttling and Fast 3G, 119 KB transferred |
 
 The accessibility audit **tests itself**: it injects five known defects (an undersized
 button, a button whose only content is `aria-hidden`, an image with no `alt`, a skipped
