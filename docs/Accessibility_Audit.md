@@ -20,7 +20,7 @@ Phases: **light**, **dark**, **high-contrast** (forced BT.709-wide palette) and 
 
 ## Result
 
-**0 violations across 15 page-audits.**
+**0 violations across 18 page-audits.**
 
 | Page audit | Interactive elements | Text nodes checked | Violations |
 |---|---|---|---|
@@ -28,17 +28,20 @@ Phases: **light**, **dark**, **high-contrast** (forced BT.709-wide palette) and 
 | light / product | 10 | 27 | 0 |
 | light / history | 8 | 13 | 0 |
 | light / profile | 28 | 36 | 0 |
-| light / settings | 15 | 31 | 0 |
+| light / settings | 16 | 32 | 0 |
+| light / diagnostics | 9 | 40 | 0 |
 | dark / product | 10 | 27 | 0 |
-| dark / settings | 15 | 31 | 0 |
+| dark / settings | 16 | 32 | 0 |
 | high-contrast / scan | 12 | 19 | 0 |
-| high-contrast / product | 10 | 27 | 0 |
-| high-contrast / settings | 15 | 30 | 0 |
+| high-contrast / product | 10 | 26 | 0 |
+| high-contrast / settings | 16 | 31 | 0 |
+| high-contrast / diagnostics | 9 | 39 | 0 |
 | font-160 / scan | 12 | 18 | 0 |
 | font-160 / product | 10 | 26 | 0 |
 | font-160 / history | 8 | 12 | 0 |
 | font-160 / profile | 28 | 35 | 0 |
-| font-160 / settings | 15 | 30 | 0 |
+| font-160 / settings | 16 | 31 | 0 |
+| font-160 / diagnostics | 9 | 39 | 0 |
 
 ## Audit self-test
 

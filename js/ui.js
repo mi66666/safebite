@@ -27,7 +27,7 @@ export function clear(node) {
 
 const VERDICT_META = {
   danger: { label: 'Avoid', icon: '⛔', cls: 'verdict-danger', hint: 'Matches something in your profile' },
-  caution: { label: 'Caution', icon: '⚠️', cls: 'verdict-caution', hint: 'May contain, or status unclear' },
+  caution: { label: 'Caution', icon: '⚠️', cls: 'verdict-caution', hint: 'May contain traces, or the entry is incomplete' },
   safe: { label: 'No match', icon: '✅', cls: 'verdict-safe', hint: 'Nothing in your profile matched' },
   unknown: { label: 'Unknown', icon: '❔', cls: 'verdict-unknown', hint: 'Not enough data on this product' },
 };

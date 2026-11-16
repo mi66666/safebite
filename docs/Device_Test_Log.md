@@ -7,19 +7,19 @@
 
 ## A. 自动化测试证据（已完成，可直接写进报告/答辩）
 
-### A1. 单元测试 —— 29 项全部通过
+### A1. 单元测试 —— 36 项全部通过
 
 运行：`npm test`（`node --test "tests/*.test.mjs"`）
 
 | 覆盖范围 | 用例数 | 内容 |
 | --- | --- | --- |
 | 条码校验位 | 6 | EAN-13 真实商品向量（Nutella / Coca-Cola）、UPC-A 补零、校验位错误必须拒绝、非法长度与非数字、空输入 |
-| 过敏原比对 | 8 | 声明过敏原→danger、坚果别名映射（`en:hazelnuts`→tree nuts）、traces→caution、无匹配→safe、无数据→unknown、自定义关键词命中、vegan 冲突、输入为 null 不崩溃 |
+| 过敏原比对 | 14 | 声明过敏原→danger、坚果别名映射（`en:hazelnuts`→tree nuts）、traces→caution、无匹配→safe、无数据→unknown、自定义关键词命中、vegan 冲突、输入为 null 不崩溃；**配料文本兜底** 6 项：漏填标签但配料写 milk→caution、已声明优先于文本证据、椰奶/燕麦奶/豆奶/杏仁奶/米奶/腰果奶不算乳、可可脂与 shea butter 不算乳、"milk-free" 不误报、小麦粉→gluten 而米粉不算 |
 | 展示与文案 | 3 | Nutri-Score 分级与兜底、NOVA 描述、过敏原标签人性化（长列表折叠） |
-| 语音播报 | 1 | 生成可朗读整句（含 Warning / Contains / May contain） |
+| 语音播报 | 2 | 生成可朗读整句（含 Warning / Contains / May contain）；文本兜底时的播报措辞 |
 | 加密与安全 | 11 | Base64 往返、同盐同密码派生一致、异盐/异密码派生不同、档案加解密往返、密文不含明文、错误密钥拒绝解密、密文篡改被 AES-GCM 拒绝、恒定时间比较、密码规则 |
 
-### A2. 端到端自动化 —— 14 项全部通过
+### A2. 端到端自动化 —— 16 项全部通过
 
 运行：`node tools/cdp-check.mjs 5173 shots`（Chrome DevTools Protocol，390×844 手机视口）
 
@@ -38,11 +38,13 @@
 | 11 | **断网后 app 外壳仍可打开**（SW 缓存） | PASS |
 | 12 | **离线可查看已保存商品**（IndexedDB 缓存） | PASS |
 | 13 | **离线查未保存商品有明确提示**（不伪造结论） | PASS |
-| 14 | 无 console 异常 | PASS |
+| 14 | **漏填过敏原声明时用配料文本兜底**（合成条目：无 allergens_tags，配料含 milk powder）→ Caution + “Ingredient list mentions” | PASS |
+| 15 | **设备自检页**报告条码/离线能力（12 行状态） | PASS |
+| 16 | 无 console 异常 | PASS |
 
 截图证据：`F:\dsh\tmp\shots\`（11 张，含高对比模式与离线态）
 
-### A3. 无障碍自动审计 —— 15 次页面审计，0 违规
+### A3. 无障碍自动审计 —— 18 次页面审计，0 违规
 
 运行：`npm run a11y`（产物：`docs/Accessibility_Audit.md` + `docs/a11y-audit.json`）
 
@@ -56,7 +58,7 @@
 | 文字对比度 | 普通文本 4.5:1／大字 3:1（对合成后的实际背景计算） | 0 违规 |
 | 横向溢出 | 100% 与 160% 字号下都不出现横向滚动 | 0 违规 |
 
-覆盖 4 种显示状态 × 5 个页面：**浅色、深色、高对比、160% 字号**。
+覆盖 4 种显示状态（**浅色、深色、高对比、160% 字号**）× 6 个页面（含设备自检页）。
 
 **审计器自检（关键）**：一个永远报 0 违规的审计器毫无价值，因此注入了 5 类已知缺陷
 （20×20 按钮、只有 `aria-hidden` 内容的按钮、无 alt 的 img、跳级标题、1.15:1 对比度文本），
@@ -96,6 +98,10 @@
 | B22 | Settings → Export my data | 下载 JSON 文件 | | ☐ |
 | B23 | Settings → Delete account | 确认后回到登录页，数据被清除 | | ☐ |
 | B24 | 关闭 Wi-Fi 后用 History 连续翻 5 条 | 不卡顿、无崩溃 | | ☐ |
+| B25 | Settings → Open device check | 各项状态全部显示 ok（BarcodeDetector supported、Service worker active、壳缓存 ≥10 文件） | | ☐ |
+| B26 | Device check → Test camera (2 seconds) | 显示相机型号与分辨率，无报错 | | ☐ |
+| B27 | Device check → Preload demo products | 提示 3/3 已保存；Products available offline 数字增加 | | ☐ |
+| B28 | 飞行模式下从桌面图标冷启动 → 打开 Demo barcodes 里的 3017620422003 | 仍能显示 Nutella 结果（预热生效） | | ☐ |
 
 **发现的问题记录**（按 B 编号填写）：
 
@@ -117,3 +123,5 @@
 | 6 | 改文件名后 Service Worker 注册整段失败（`ServiceWorker script evaluation failed`） | 用 PowerShell `Set-Content` 做批量文本替换时，默认以 GBK 回写，把文件里的 UTF-8 中文注释写坏，`sw.js` 出现语法错误 | 从 Git 恢复文件，改用能保证 UTF-8 的编辑方式；并把 `.webmanifest` 一并改名为 `manifest.json`（GitHub Pages 不保证 `application/manifest+json` 的 MIME，类型错误会导致 Chrome 丢弃 manifest、装不上主屏幕） |
 | 7 | 扫码过程中切换语音开关，预览变黑但相机指示灯常亮 | 语音按钮调用整页 `render()`，`<video>` 元素被替换，而摄像头流仍绑定在旧元素上 | 语音按钮改为就地更新自身状态；同时在 `render()` 开头统一 `stopScanner()`，任何整页重渲染前必定释放摄像头（也是隐私问题） |
 | 8 | 无障碍审计器对"只有 `aria-hidden` 内容的按钮"漏报 | 计算可访问名称时用了 `element.textContent`，而该属性包含被 `aria-hidden` 隐藏的后代文本，与可访问名称算法不符 | 改为只收集未被 `aria-hidden="true"` 隐藏的后代文本；由审计器自检（注入已知缺陷）发现并验证 |
+| 9 | **安全隐患**：数据库条目漏填 `allergens_tags` 时，配料表写着 "milk powder" 也会被判为 "No match / 安全" | 结论只依赖声明标签；Open Food Facts 是社区数据，漏填很常见 | 增加配料文本兜底：按过敏原关键词扫描配料表，并用排除规则避免误报（椰奶/燕麦奶不算乳、可可脂不算乳、"milk-free" 反向声明）；文本证据只降级为 **Caution** 并明确说明"该条目没有过敏原声明"，同时继续显示未知（绝不谎报安全）。新增 7 条单元测试锁定该行为 |
+| 10 | 无障碍审计脚本在切换高对比模式那步崩溃 | 脚本隐式假设"上一阶段结束停在设置页"，而我给高对比阶段新增了诊断页作为末页 | 改为显式导航到 `#/settings` 并等待控件出现，去掉阶段间的隐式依赖 |

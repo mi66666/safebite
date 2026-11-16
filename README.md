@@ -27,6 +27,7 @@ general public.
 | Product data | [Open Food Facts](https://world.openfoodfacts.org) API v2 — free and open, **no API key required** |
 | Personal profile | 14 UK/EU declarable allergens, dietary preferences, custom ingredient keywords |
 | Verdict engine | Danger / Caution / Safe / Unknown, with traces-versus-contains distinction |
+| Missing-data fallback | When an entry has no allergen declaration, the ingredient text is searched instead — with exclusion rules so coconut milk is not reported as dairy — and the result is reported as *Caution*, never as safe |
 | Local storage | IndexedDB (users, encrypted profile, scan history, product cache, preferences) |
 | Offline | Service worker precaches the app shell; visited products are cached in IndexedDB and remain readable with no connection |
 | Accounts | Local WebCrypto auth — PBKDF2-SHA256 (210 000 iterations, per-user salt), profile encrypted with AES-GCM |
@@ -50,14 +51,14 @@ does not — for a phone you need HTTPS (GitHub Pages is used for this project).
 Three independent suites, all runnable from a clean checkout:
 
 ```bash
-npm test        # 29 unit tests (logic + crypto), zero dependencies, no browser
-npm run check   # 14 end-to-end checks in a 390×844 mobile viewport via CDP
-npm run a11y    # accessibility audit: 15 page-audits across 4 display modes
+npm test        # 36 unit tests (logic + crypto), zero dependencies, no browser
+npm run check   # 16 end-to-end checks in a 390×844 mobile viewport via CDP
+npm run a11y    # accessibility audit: 18 page-audits across 4 display modes
 ```
 
 | Suite | Checks | What it proves |
 |---|---|---|
-| Unit (`tests/`) | 29 passing | GS1 check digits against real products, UPC-A padding, rejected checksums, allergen alias matching (`en:hazelnuts` → tree nuts), traces-vs-contains, dietary flags, AES-GCM round-trip, wrong-key rejection, tamper detection, constant-time compare |
+| Unit (`tests/`) | 29 passing | GS1 check digits against real products, UPC-A padding, rejected checksums, allergen alias matching (`en:hazelnuts` → tree nuts), traces-vs-contains, ingredient-text fallback for entries with no allergen declaration (including coconut-milk and cocoa-butter exclusions), dietary flags, AES-GCM round-trip, wrong-key rejection, tamper detection, constant-time compare |
 | End-to-end (`tools/cdp-check.mjs`) | 14 passing | Registration, encrypted profile, live Open Food Facts lookup, history persistence, service worker activation, text scaling, high contrast, invalid barcode handling, and **genuine offline behaviour** (network disabled via `Network.emulateNetworkConditions`) |
 | Accessibility (`tools/a11y-audit.mjs`) | 0 violations | Touch targets ≥ 44 px, accessible names, image alternatives, heading order, landmarks, WCAG contrast (4.5:1 / 3:1), horizontal overflow — measured in light, dark, high-contrast and 160 % text modes |
 
@@ -103,9 +104,10 @@ js/scan.js            camera + BarcodeDetector lifecycle, graceful degradation
 js/voice.js           SpeechSynthesis wrapper
 js/a11y.js            accessibility preferences, applied before first paint
 js/ui.js              tiny DOM helpers (no framework)
-js/app.js             hash router and the five views
+js/app.js             hash router and the six views (including device check)
 sw.js                 service worker: precache shell, offline navigation fallback
-tools/                dev server, icon generator, CDP end-to-end checker
+tools/                dev server, icon generator, CDP end-to-end checker,
+                      accessibility audit, screenshots, PDF report builder
 tests/                node:test unit tests
 ```
 

@@ -321,6 +321,7 @@ async function main() {
     { id: 'history', hash: '#/history', wait: "document.querySelector('.history-list, .empty-state')" },
     { id: 'profile', hash: '#/profile', wait: "document.querySelector('.chip-grid')" },
     { id: 'settings', hash: '#/settings', wait: "document.querySelector('.switch')" },
+    { id: 'diagnostics', hash: '#/diagnostics', wait: "document.querySelectorAll('.diag-row').length > 2 && !/Checking/.test(document.querySelector('.diag-list').textContent)" },
   ];
 
   const runPhase = async (phase, pageIds, media = null) => {
@@ -336,7 +337,7 @@ async function main() {
     }
   };
 
-  await runPhase('light', ['scan', 'product', 'history', 'profile', 'settings'], 'light');
+  await runPhase('light', ['scan', 'product', 'history', 'profile', 'settings', 'diagnostics'], 'light');
   await runPhase('dark', ['product', 'settings'], 'dark');
 
   // 高对比模式
@@ -350,9 +351,12 @@ async function main() {
     })()
   `);
   await sleep(400);
-  await runPhase('high-contrast', ['scan', 'product', 'settings']);
+  await runPhase('high-contrast', ['scan', 'product', 'settings', 'diagnostics']);
 
   // 160% 字号
+  // 注意：不能假设上一阶段结束停在设置页（阶段末页会变），必须显式导航。
+  await page.evaluate("location.hash = '#/settings'; true");
+  await page.waitFor("document.querySelector('.switch')");
   await page.evaluate(`
     (() => {
       const s = [...document.querySelectorAll('.switch')].find((x) => /high contrast/i.test(x.closest('.setting-row')?.textContent || ''));
@@ -365,7 +369,7 @@ async function main() {
     })()
   `);
   await sleep(500);
-  await runPhase('font-160', ['scan', 'product', 'history', 'profile', 'settings']);
+  await runPhase('font-160', ['scan', 'product', 'history', 'profile', 'settings', 'diagnostics']);
 
   /* ---- 审计工具自检 ----
    * 一个永远返回"0 违规"的审计器毫无价值。这里注入 5 类已知缺陷，

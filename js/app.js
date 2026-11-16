@@ -15,7 +15,7 @@ import { validateBarcode, assessProduct, nutriScoreInfo, novaInfo, buildSpeechTe
 import { fetchProduct, toAssessmentInput } from './api.js';
 import { currentUser, login, register, logout, loadProfile, saveProfile, deleteAccount, lastEmail, isValidEmail } from './auth.js';
 import { getScans, clearScans } from './db.js';
-import { startScanner, stopScanner, isDetectorSupported, haptic } from './scan.js';
+import { startScanner, stopScanner, isDetectorSupported, supportedFormats, haptic } from './scan.js';
 
 const state = {
   session: null,
@@ -78,6 +78,9 @@ function render() {
     case 'settings':
       renderSettings(target);
       break;
+    case 'diagnostics':
+      renderDiagnostics(target);
+      break;
     default:
       renderScan(target);
   }
@@ -85,7 +88,14 @@ function render() {
 }
 
 function buildHeader() {
-  const titles = { scan: 'SafeBite', product: 'Result', history: 'History', profile: 'My profile', settings: 'Settings' };
+  const titles = {
+    scan: 'SafeBite',
+    product: 'Result',
+    history: 'History',
+    profile: 'My profile',
+    settings: 'Settings',
+    diagnostics: 'Device check',
+  };
 
   // 语音开关就地更新按钮状态，不触发整页重渲染：
   // 重渲染会换掉 <video> 元素，而摄像头流仍绑定在旧元素上，
@@ -372,6 +382,7 @@ async function renderProduct(target, barcode) {
     verdict: assessment.verdict,
     contains: assessment.contains,
     traces: assessment.traces,
+    textHits: assessment.textHits,
     dietFlags: assessment.dietFlags,
     keywordHits: assessment.keywordHits,
   });
@@ -453,17 +464,32 @@ function buildFindings(assessment) {
   if (assessment.traces.length) {
     rows.push(findingBlock('May contain traces of', 'caution', assessment.traces.map((t) => t.label)));
   }
+  if (assessment.textHits && assessment.textHits.length) {
+    rows.push(
+      el('section', { class: 'card finding finding-caution' }, [
+        el('h2', { class: 'card-title' }, ['Ingredient list mentions']),
+        el('ul', { class: 'finding-list' }, assessment.textHits.map((hit) =>
+          el('li', {}, [`${hit.label} — found “${hit.words.join('”, “')}”`])
+        )),
+        el('p', { class: 'meta-line' }, [
+          'This database entry has no allergen declaration, so the ingredient text was searched instead. Check the pack before eating.',
+        ]),
+      ])
+    );
+  }
   const dietWarn = assessment.dietFlags.filter((d) => d.level === 'traces');
   if (dietWarn.length) rows.push(findingBlock('Diet status unclear', 'caution', dietWarn.map((d) => d.label)));
 
   if (!rows.length) {
+    let note = 'None of your avoided allergens appear in the declared allergen list or traces.';
+    if (assessment.dataQuality === 'missing') {
+      note = 'This product has no allergen data in the database, so it could not be checked. Treat it as unknown.';
+    } else if (assessment.dataQuality === 'partial') {
+      note = 'This entry has no declared allergen list. Only the ingredient text was searched, so treat this result with caution.';
+    }
     rows.push(el('section', { class: 'card findings-empty' }, [
       el('h2', { class: 'card-title' }, ['Nothing matched your profile']),
-      el('p', {}, [
-        assessment.dataQuality === 'missing'
-          ? 'This product has no allergen data in the database, so it could not be checked. Treat it as unknown.'
-          : 'None of your avoided allergens appear in the declared allergen list or traces.',
-      ]),
+      el('p', {}, [note]),
     ]));
   }
   return el('div', { class: 'findings' }, rows);
@@ -808,8 +834,184 @@ function renderSettings(target) {
       el('p', { class: 'meta-line' }, ['SafeBite checks a scanned product against your own allergy profile.']),
       el('p', { class: 'meta-line' }, ['Product data: Open Food Facts (ODbL). Camera frames never leave this device.']),
       el('p', { class: 'meta-line' }, [`Version 1.0 · ${isDetectorSupported() ? 'Camera scanning supported' : 'Camera scanning unavailable in this browser'}`]),
+      el('a', { class: 'btn btn-secondary btn-block', href: '#/diagnostics' }, ['Open device check']),
     ])
   );
+}
+
+/* --------------------------------------------------------- 设备自检页 */
+
+/** 采集本机能力状态，用于真机测试与演示前检查 */
+async function collectDiagnostics() {
+  const rows = [];
+  const push = (label, value, status = 'ok') => rows.push({ label, value, status });
+
+  const ua = navigator.userAgent;
+  const chromeVersion = (ua.match(/Chrome\/([\d.]+)/) || [])[1] || 'unknown';
+  push('Browser', `Chrome ${chromeVersion}`, 'ok');
+  push('Platform', navigator.platform || 'unknown', 'ok');
+
+  const detector = isDetectorSupported();
+  push('BarcodeDetector API', detector ? 'supported' : 'not supported — type the barcode instead', detector ? 'ok' : 'warn');
+  if (detector) {
+    const formats = await supportedFormats();
+    push('Barcode formats', formats.join(', ') || 'none reported', formats.length ? 'ok' : 'warn');
+  }
+
+  const hasCameraApi = Boolean(navigator.mediaDevices?.getUserMedia);
+  push('Camera API', hasCameraApi ? 'available' : 'unavailable', hasCameraApi ? 'ok' : 'warn');
+  if (navigator.mediaDevices?.enumerateDevices) {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter((d) => d.kind === 'videoinput').length;
+      push('Video inputs', String(cams), cams > 0 ? 'ok' : 'warn');
+    } catch {
+      push('Video inputs', 'permission needed', 'warn');
+    }
+  }
+
+  if ('serviceWorker' in navigator) {
+    const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
+    push(
+      'Service worker',
+      reg?.active ? `active (${reg.active.state})` : reg ? 'registered, not yet active' : 'not registered',
+      reg?.active ? 'ok' : 'fail'
+    );
+    const keys = await caches.keys().catch(() => []);
+    const shell = keys.find((k) => k.startsWith('safebite-shell-'));
+    let shellCount = 0;
+    if (shell) {
+      const cache = await caches.open(shell);
+      shellCount = (await cache.keys()).length;
+    }
+    push('App shell cache', shell ? `${shellCount} files in ${shell}` : 'none', shellCount >= 10 ? 'ok' : 'warn');
+  } else {
+    push('Service worker', 'not supported', 'fail');
+  }
+
+  try {
+    const { getAll } = await import('./db.js');
+    const [scans, cached, users] = await Promise.all([
+      getAll('scans').catch(() => []),
+      getAll('cache').catch(() => []),
+      getAll('users').catch(() => []),
+    ]);
+    push('Saved scans', String(scans.length), 'ok');
+    push('Products available offline', String(cached.length), cached.length ? 'ok' : 'warn');
+    push('Local accounts', String(users.length), 'ok');
+  } catch (err) {
+    push('Local storage', `error: ${err.message}`, 'fail');
+  }
+
+  if (navigator.storage?.estimate) {
+    const est = await navigator.storage.estimate().catch(() => null);
+    if (est?.quota) {
+      push('Storage used', `${(est.usage / 1048576).toFixed(1)} MB of ${(est.quota / 1048576).toFixed(0)} MB`, 'ok');
+    }
+  }
+
+  push('Network', navigator.onLine === false ? 'offline' : 'online', navigator.onLine === false ? 'warn' : 'ok');
+  return rows;
+}
+
+function renderDiagnostics(target) {
+  const list = el('ul', { class: 'diag-list' });
+  const cameraResult = el('p', { class: 'meta-line', role: 'status' }, ['Camera not tested yet.']);
+
+  const paint = async () => {
+    clear(list);
+    list.append(el('li', { class: 'diag-row' }, [el('span', { class: 'diag-label' }, ['Checking…'])]));
+    const rows = await collectDiagnostics();
+    clear(list);
+    for (const row of rows) {
+      list.append(
+        el('li', { class: 'diag-row' }, [
+          el('span', { class: 'diag-label' }, [row.label]),
+          el('span', { class: `diag-value diag-${row.status}` }, [row.value]),
+        ])
+      );
+    }
+    return rows;
+  };
+
+  const preloadBtn = el('button', { class: 'btn btn-primary btn-block', type: 'button' }, ['Preload demo products for offline use']);
+  preloadBtn.addEventListener('click', async () => {
+    preloadBtn.disabled = true;
+    preloadBtn.textContent = 'Downloading…';
+    let ok = 0;
+    const failed = [];
+    for (const item of DEMO_BARCODES) {
+      const res = await fetchProduct(item.code, { force: true });
+      if (res.status === 'ok') ok += 1;
+      else failed.push(item.code);
+    }
+    preloadBtn.disabled = false;
+    preloadBtn.textContent = 'Preload demo products for offline use';
+    toast(
+      failed.length
+        ? `Saved ${ok}/${DEMO_BARCODES.length} — could not reach ${failed.join(', ')}`
+        : `All ${ok} demo products are saved on this device`,
+      failed.length ? 'error' : 'info'
+    );
+    await paint();
+  });
+
+  const cameraBtn = el('button', { class: 'btn btn-secondary btn-block', type: 'button' }, ['Test camera (2 seconds)']);
+  cameraBtn.addEventListener('click', async () => {
+    cameraBtn.disabled = true;
+    cameraResult.textContent = 'Requesting camera…';
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+      const track = stream.getVideoTracks()[0];
+      const settings = track.getSettings ? track.getSettings() : {};
+      cameraResult.textContent = `Camera OK — ${track.label || 'camera'} at ${settings.width || '?'}×${settings.height || '?'}.`;
+      toast('Camera works');
+    } catch (err) {
+      cameraResult.textContent =
+        err?.name === 'NotAllowedError'
+          ? 'Camera permission denied. Allow it in Chrome site settings, then try again.'
+          : `Camera failed: ${err?.message || err?.name}`;
+      toast('Camera test failed', 'error');
+    } finally {
+      if (stream) for (const t of stream.getTracks()) t.stop();
+      cameraBtn.disabled = false;
+    }
+  });
+
+  const copyBtn = el('button', { class: 'btn btn-secondary btn-block', type: 'button' }, ['Copy report to clipboard']);
+  copyBtn.addEventListener('click', async () => {
+    const rows = await paint();
+    const text = [
+      `SafeBite device check — ${new Date().toISOString()}`,
+      `User agent: ${navigator.userAgent}`,
+      ...rows.map((r) => `${r.label}: ${r.value} [${r.status}]`),
+    ].join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      toast('Report copied — paste it into the device test log');
+    } catch {
+      toast('Clipboard blocked — screenshot this page instead', 'error');
+    }
+  });
+
+  target.append(
+    el('h1', { class: 'page-title' }, ['Device check']),
+    el('p', { class: 'page-sub' }, [
+      'Live status of this device. Run it before the demo and when filling in the device test log.',
+    ]),
+    el('section', { class: 'card' }, [list]),
+    el('section', { class: 'card' }, [
+      el('h2', { class: 'card-title' }, ['Prepare for the demo']),
+      el('p', { class: 'meta-line' }, [
+        'Downloads the demo products so they work even if the venue Wi-Fi fails.',
+      ]),
+      el('div', { class: 'btn-stack' }, [preloadBtn, cameraBtn, copyBtn]),
+      cameraResult,
+    ])
+  );
+
+  void paint();
 }
 
 /* ------------------------------------------------------------- 启动 */

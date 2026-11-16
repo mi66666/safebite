@@ -3,23 +3,63 @@
  * 职责：条码校验、过敏原比对、营养分级、语音播报文案生成
  */
 
-/** EU 14 类法定过敏原 + Open Food Facts 的标签别名映射 */
+/** EU 14 类法定过敏原 + Open Food Facts 的标签别名映射
+ *  words: 配料表文本兜底识别用的关键词（当数据库漏填 allergens_tags 时救命）
+ */
 export const ALLERGENS = [
-  { id: 'gluten', label: 'Cereals containing gluten', tags: ['gluten', 'wheat', 'barley', 'oats', 'rye', 'spelt', 'kamut'] },
-  { id: 'crustaceans', label: 'Crustaceans', tags: ['crustaceans'] },
-  { id: 'eggs', label: 'Eggs', tags: ['eggs', 'egg'] },
-  { id: 'fish', label: 'Fish', tags: ['fish'] },
-  { id: 'peanuts', label: 'Peanuts', tags: ['peanuts', 'peanut'] },
-  { id: 'soybeans', label: 'Soybeans', tags: ['soybeans', 'soy', 'soya'] },
-  { id: 'milk', label: 'Milk', tags: ['milk', 'lactose'] },
-  { id: 'nuts', label: 'Tree nuts', tags: ['nuts', 'almonds', 'hazelnuts', 'walnuts', 'cashews', 'pecans', 'brazil-nuts', 'macadamia-nuts', 'pistachio-nuts', 'chestnuts'] },
-  { id: 'celery', label: 'Celery', tags: ['celery'] },
-  { id: 'mustard', label: 'Mustard', tags: ['mustard'] },
-  { id: 'sesame', label: 'Sesame seeds', tags: ['sesame-seeds', 'sesame'] },
-  { id: 'sulphites', label: 'Sulphur dioxide and sulphites', tags: ['sulphur-dioxide-and-sulphites', 'sulphites'] },
-  { id: 'lupin', label: 'Lupin', tags: ['lupin'] },
-  { id: 'molluscs', label: 'Molluscs', tags: ['molluscs'] },
+  {
+    id: 'gluten',
+    label: 'Cereals containing gluten',
+    tags: ['gluten', 'wheat', 'barley', 'oats', 'rye', 'spelt', 'kamut'],
+    words: ['wheat', 'barley', 'rye', 'oat', 'spelt', 'kamut', 'semolina', 'couscous', 'bulgur', 'malt', 'flour'],
+  },
+  { id: 'crustaceans', label: 'Crustaceans', tags: ['crustaceans'], words: ['crab', 'prawn', 'shrimp', 'lobster', 'crayfish', 'langoustine', 'crustacean'] },
+  { id: 'eggs', label: 'Eggs', tags: ['eggs', 'egg'], words: ['egg', 'albumen', 'ovalbumin', 'mayonnaise'] },
+  { id: 'fish', label: 'Fish', tags: ['fish'], words: ['fish', 'anchovy', 'cod', 'salmon', 'tuna', 'haddock', 'sardine', 'fishmeal'] },
+  { id: 'peanuts', label: 'Peanuts', tags: ['peanuts', 'peanut'], words: ['peanut', 'groundnut', 'arachis'] },
+  { id: 'soybeans', label: 'Soybeans', tags: ['soybeans', 'soy', 'soya'], words: ['soy', 'soya', 'tofu', 'edamame', 'tempeh'] },
+  {
+    id: 'milk',
+    label: 'Milk',
+    tags: ['milk', 'lactose'],
+    words: ['milk', 'cream', 'butter', 'cheese', 'whey', 'casein', 'caseinate', 'lactose', 'yoghurt', 'yogurt', 'ghee', 'buttermilk', 'curd'],
+  },
+  {
+    id: 'nuts',
+    label: 'Tree nuts',
+    tags: ['nuts', 'almonds', 'hazelnuts', 'walnuts', 'cashews', 'pecans', 'brazil-nuts', 'macadamia-nuts', 'pistachio-nuts', 'chestnuts'],
+    words: ['almond', 'hazelnut', 'walnut', 'cashew', 'pecan', 'brazil nut', 'macadamia', 'pistachio', 'chestnut', 'praline', 'marzipan'],
+  },
+  { id: 'celery', label: 'Celery', tags: ['celery'], words: ['celery', 'celeriac'] },
+  { id: 'mustard', label: 'Mustard', tags: ['mustard'], words: ['mustard'] },
+  { id: 'sesame', label: 'Sesame seeds', tags: ['sesame-seeds', 'sesame'], words: ['sesame', 'tahini'] },
+  { id: 'sulphites', label: 'Sulphur dioxide and sulphites', tags: ['sulphur-dioxide-and-sulphites', 'sulphites'], words: ['sulphite', 'sulfite', 'metabisulphite', 'metabisulfite', 'e220', 'e221', 'e222', 'e223', 'e224', 'e225', 'e226', 'e227', 'e228'] },
+  { id: 'lupin', label: 'Lupin', tags: ['lupin'], words: ['lupin'] },
+  { id: 'molluscs', label: 'Molluscs', tags: ['molluscs'], words: ['squid', 'mussel', 'oyster', 'clam', 'scallop', 'octopus', 'snail', 'whelk', 'mollusc'] },
 ];
+
+/**
+ * 文本兜底的排除规则：这些写法虽然包含关键词，但并非该过敏原。
+ * 例：coconut milk 不含乳蛋白，cocoa butter 不是乳制品，rice flour 不含麸质，
+ *     "milk-free" 是反向声明。宁可漏判也不要把"椰子奶"报成"含牛奶"，
+ *     因为误报会让用户对整个 app 失去信任。
+ */
+const TEXT_EXCLUSIONS = {
+  milk: [
+    /(coconut|oat|soya?|almond|rice|cashew|hazelnut|hemp|pea|potato|seed)\s*milk/,
+    /(cocoa|shea|peanut|nut|apple|sunflower|seed)\s*butter/,
+    /milk\s*thistle/,
+    /(non-?dairy|dairy\s*-?\s*free|milk\s*-?\s*free|free\s+from\s+[a-z\s]{0,14}$)/,
+  ],
+  gluten: [
+    /(rice|corn|maize|potato|coconut|almond|chickpea|gram|tapioca|buckwheat|soya?|oat)\s*flour/,
+    /(gluten\s*-?\s*free|free\s+from\s+[a-z\s]{0,14}$)/,
+  ],
+  nuts: [/(nutmeg|nut\s*butter alternatives|shea\s*nut)/],
+  eggs: [/eggplant|egg\s*-?\s*free/],
+  soybeans: [/(soy|soya)\s*(sauce)?\s*-?\s*free/],
+};
+
 
 /** 饮食偏好 → 判定规则 */
 export const DIETS = [
@@ -77,19 +117,46 @@ export function eanCheckDigit(body) {
 }
 
 /**
+ * 在配料文本里查找某个过敏原的证据。
+ * 逐个关键词扫描，命中后取上下文窗口，若窗口命中排除规则则继续找下一个出现位置。
+ * @returns {string[]} 命中的关键词（已排除误报）
+ */
+export function findTextEvidence(allergen, ingredientsText) {
+  const hay = String(ingredientsText || '').toLowerCase();
+  if (!hay || !Array.isArray(allergen.words)) return [];
+  const exclusions = TEXT_EXCLUSIONS[allergen.id] || [];
+  const hits = [];
+
+  for (const word of allergen.words) {
+    let idx = hay.indexOf(word);
+    while (idx !== -1) {
+      const window = hay.slice(Math.max(0, idx - 30), idx + word.length + 16);
+      const excluded = exclusions.some((re) => re.test(window));
+      if (!excluded) {
+        hits.push(word);
+        break; // 同一关键词只需命中一次
+      }
+      idx = hay.indexOf(word, idx + word.length);
+    }
+  }
+  return hits;
+}
+
+/**
  * 核心：把商品数据与用户档案比对，得出结论。
  * @param {object} product Open Food Facts 商品对象
  * @param {{allergens?: string[], diets?: string[], keywords?: string[]}} profile 用户档案
- * @returns {{verdict:'danger'|'caution'|'safe'|'unknown', contains:Array, traces:Array, dietFlags:Array, keywordHits:Array, dataQuality:string}}
+ * @returns {{verdict:'danger'|'caution'|'safe'|'unknown', contains:Array, traces:Array, textHits:Array, dietFlags:Array, keywordHits:Array, dataQuality:string}}
  */
 export function assessProduct(product, profile = {}) {
   const contains = [];
   const traces = [];
+  const textHits = [];
   const dietFlags = [];
   const keywordHits = [];
 
   if (!product || typeof product !== 'object') {
-    return { verdict: 'unknown', contains, traces, dietFlags, keywordHits, dataQuality: 'no-product' };
+    return { verdict: 'unknown', contains, traces, textHits, dietFlags, keywordHits, dataQuality: 'no-product' };
   }
 
   const allergenTags = normalizeTags(product.allergens_tags);
@@ -106,7 +173,14 @@ export function assessProduct(product, profile = {}) {
       continue;
     }
     const traceHit = allergen.tags.find((t) => traceTags.has(t));
-    if (traceHit) traces.push({ id: allergen.id, label: allergen.label, tag: traceHit });
+    if (traceHit) {
+      traces.push({ id: allergen.id, label: allergen.label, tag: traceHit });
+      continue;
+    }
+    // 关键兜底：社区数据库常常漏填 allergens_tags。
+    // 如果配料表里明确写了 milk powder，却因为标签缺失就说"安全"，那是最危险的错误。
+    const words = findTextEvidence(allergen, ingredientsText);
+    if (words.length) textHits.push({ id: allergen.id, label: allergen.label, words });
   }
 
   // 饮食偏好
@@ -149,10 +223,10 @@ export function assessProduct(product, profile = {}) {
 
   let verdict = 'safe';
   if (contains.length || dietFlags.some((d) => d.level === 'contains') || keywordHits.length) verdict = 'danger';
-  else if (traces.length || dietFlags.some((d) => d.level === 'traces')) verdict = 'caution';
+  else if (traces.length || textHits.length || dietFlags.some((d) => d.level === 'traces')) verdict = 'caution';
   else if (!hasData) verdict = 'unknown';
 
-  return { verdict, contains, traces, dietFlags, keywordHits, dataQuality };
+  return { verdict, contains, traces, textHits, dietFlags, keywordHits, dataQuality };
 }
 
 const NUTRI_SCORE = {
@@ -180,7 +254,7 @@ export function novaInfo(group) {
 }
 
 /** 生成给屏幕阅读器 / 语音朗读的整句播报文本 */
-export function buildSpeechText({ productName, verdict, contains, traces, dietFlags, keywordHits }) {
+export function buildSpeechText({ productName, verdict, contains, traces, textHits, dietFlags, keywordHits }) {
   const name = productName || 'This product';
   const bits = [];
   if (verdict === 'danger') bits.push('Warning.');
@@ -192,6 +266,11 @@ export function buildSpeechText({ productName, verdict, contains, traces, dietFl
   if (keywordHits?.length) bits.push(`Ingredients mention ${keywordHits.map((k) => k.keyword).join(', ')}.`);
   const dangerDiets = (dietFlags || []).filter((d) => d.level === 'contains');
   if (dangerDiets.length) bits.push(`${dangerDiets.map((d) => d.label).join(', ')}.`);
+  if (textHits?.length) {
+    bits.push(
+      `The ingredient list mentions ${textHits.map((t) => t.label).join(', ')}, although this entry has no allergen declaration.`
+    );
+  }
   if (traces?.length) bits.push(`May contain ${traces.map((t) => t.label).join(', ')}.`);
   return `${name}. ${bits.join(' ')}`.replace(/\s+/g, ' ').trim();
 }

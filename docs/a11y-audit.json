@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-16T20:24:17.882Z",
+  "generatedAt": "2026-11-16T20:33:32.784Z",
   "total": 0,
   "byRule": {},
   "selftest": {
@@ -61,8 +61,17 @@
       "page": "settings",
       "violations": [],
       "counts": {
-        "interactive": 15,
-        "textNodes": 31
+        "interactive": 16,
+        "textNodes": 32
+      }
+    },
+    {
+      "phase": "light",
+      "page": "diagnostics",
+      "violations": [],
+      "counts": {
+        "interactive": 9,
+        "textNodes": 40
       }
     },
     {
@@ -79,8 +88,8 @@
       "page": "settings",
       "violations": [],
       "counts": {
-        "interactive": 15,
-        "textNodes": 31
+        "interactive": 16,
+        "textNodes": 32
       }
     },
     {
@@ -98,7 +107,7 @@
       "violations": [],
       "counts": {
         "interactive": 10,
-        "textNodes": 27
+        "textNodes": 26
       }
     },
     {
@@ -106,8 +115,17 @@
       "page": "settings",
       "violations": [],
       "counts": {
-        "interactive": 15,
-        "textNodes": 30
+        "interactive": 16,
+        "textNodes": 31
+      }
+    },
+    {
+      "phase": "high-contrast",
+      "page": "diagnostics",
+      "violations": [],
+      "counts": {
+        "interactive": 9,
+        "textNodes": 39
       }
     },
     {
@@ -151,8 +169,17 @@
       "page": "settings",
       "violations": [],
       "counts": {
-        "interactive": 15,
-        "textNodes": 30
+        "interactive": 16,
+        "textNodes": 31
+      }
+    },
+    {
+      "phase": "font-160",
+      "page": "diagnostics",
+      "violations": [],
+      "counts": {
+        "interactive": 9,
+        "textNodes": 39
       }
     }
   ]

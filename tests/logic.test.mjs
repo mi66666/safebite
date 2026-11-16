@@ -17,6 +17,8 @@ import {
   buildSpeechText,
   humanizeTags,
   normalizeTags,
+  findTextEvidence,
+  ALLERGENS,
 } from '../js/logic.js';
 
 test('EAN-13 check digit matches GS1 rule', () => {
@@ -164,4 +166,77 @@ test('buildSpeechText produces an actionable sentence', () => {
   assert.match(text, /Warning/);
   assert.match(text, /Contains Milk/);
   assert.match(text, /May contain Nuts/);
+});
+
+/* ------------------------------------------------------------------
+ * 配料文本兜底：社区数据库常常漏填 allergens_tags，
+ * 此时若只说"安全"就是最危险的错误。以下用例锁住这个行为。
+ * ------------------------------------------------------------------ */
+
+test('ingredient text catches an undeclared allergen as caution', () => {
+  const product = {
+    allergens_tags: [], // 条目漏填了过敏原声明
+    traces_tags: [],
+    ingredients_text: 'Sugar, wheat flour, milk powder, emulsifier (soya lecithin)',
+  };
+  const result = assessProduct(product, { allergens: ['milk'] });
+  assert.equal(result.verdict, 'caution', '未声明的牛奶不能判为 safe');
+  assert.equal(result.textHits.length, 1);
+  assert.equal(result.textHits[0].id, 'milk');
+  assert.equal(result.dataQuality, 'partial');
+});
+
+test('declared allergen still wins over text evidence', () => {
+  const product = { allergens_tags: ['en:milk'], traces_tags: [], ingredients_text: 'milk powder' };
+  const result = assessProduct(product, { allergens: ['milk'] });
+  assert.equal(result.verdict, 'danger');
+  assert.equal(result.contains.length, 1);
+  assert.equal(result.textHits.length, 0, '已声明时不应重复计入文本证据');
+});
+
+test('plant "milks" are not treated as dairy', () => {
+  for (const phrase of ['coconut milk', 'oat milk', 'soya milk', 'almond milk', 'rice milk', 'cashew milk']) {
+    const result = assessProduct({ allergens_tags: [], ingredients_text: `Water, ${phrase}, sugar` }, { allergens: ['milk'] });
+    assert.equal(result.verdict, 'safe', `${phrase} 不应被判为含乳`);
+    assert.equal(result.textHits.length, 0, `${phrase} 不该产生文本证据`);
+  }
+});
+
+test('non-dairy butters and dairy-free wording are excluded', () => {
+  for (const phrase of ['cocoa butter', 'shea butter', 'peanut butter', 'milk thistle', 'milk-free recipe', 'dairy-free']) {
+    const result = assessProduct({ allergens_tags: [], ingredients_text: `Water, ${phrase}, salt` }, { allergens: ['milk'] });
+    assert.equal(result.textHits.length, 0, `${phrase} 不该被判为含乳`);
+  }
+});
+
+test('gluten is found in wheat flour but not in rice flour', () => {
+  const wheat = assessProduct({ allergens_tags: [], ingredients_text: 'wheat flour, water' }, { allergens: ['gluten'] });
+  assert.equal(wheat.verdict, 'caution');
+  assert.equal(wheat.textHits[0].id, 'gluten');
+
+  const rice = assessProduct({ allergens_tags: [], ingredients_text: 'rice flour, water' }, { allergens: ['gluten'] });
+  assert.equal(rice.verdict, 'safe');
+  assert.equal(rice.textHits.length, 0);
+});
+
+test('findTextEvidence reports the matched keyword', () => {
+  const milk = ALLERGENS.find((a) => a.id === 'milk');
+  assert.deepEqual(findTextEvidence(milk, 'Ingredients: whey powder, sugar'), ['whey']);
+  assert.deepEqual(findTextEvidence(milk, 'Ingredients: water, salt'), []);
+  assert.deepEqual(findTextEvidence(milk, ''), []);
+});
+
+test('speech text explains text-only evidence', () => {
+  const text = buildSpeechText({
+    productName: 'Cereal bar',
+    verdict: 'caution',
+    contains: [],
+    traces: [],
+    textHits: [{ label: 'Milk' }],
+    dietFlags: [],
+    keywordHits: [],
+  });
+  assert.match(text, /Caution/);
+  assert.match(text, /ingredient list mentions Milk/i);
+  assert.match(text, /no allergen declaration/i);
 });

@@ -256,7 +256,84 @@ async function main() {
   check('扫码写入历史', historyCount >= 1, `${historyCount} 条记录`);
   await page.shot('05-history');
 
-  // --- 6. 离线能力：Service Worker + 缓存 ---
+  // --- 6b. 安全兜底：条目漏填过敏原声明时，必须用配料文本兜底而不是谎报安全 ---
+  await page.evaluate(`
+    (async () => {
+      const db = await new Promise((resolve, reject) => {
+        const req = indexedDB.open('safebite');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      const product = {
+        barcode: '0000000000000',
+        name: 'Campus Cereal Bar',
+        brands: 'Test Foods Ltd',
+        quantity: '40 g',
+        image: '',
+        allergensTags: [],
+        tracesTags: [],
+        ingredientsText: 'Sugar, wheat flour, milk powder, cocoa butter, emulsifier (soya lecithin)',
+        analysisTags: [],
+        nutriscoreGrade: '',
+        novaGroup: null,
+        additives: [],
+        categories: [],
+        labels: [],
+      };
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('cache', 'readwrite');
+        tx.objectStore('cache').put({ barcode: product.barcode, product, fetchedAt: Date.now() });
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+      db.close();
+      return true;
+    })()
+  `);
+  await page.evaluate("location.hash = '#/product/0000000000000'; true");
+  await page.waitFor("document.querySelector('.verdict') || document.querySelector('.banner-error')", {
+    timeout: 15000,
+    label: 'text-fallback product',
+  });
+  const fallback = await page.evaluate(`
+    ({
+      verdict: document.querySelector('.verdict-label')?.textContent || null,
+      cardTitles: [...document.querySelectorAll('.finding .card-title')].map((t) => t.textContent),
+      detail: [...document.querySelectorAll('.finding-list li')].map((t) => t.textContent),
+    })
+  `);
+  check(
+    '漏填过敏原声明时用配料文本兜底（不谎报安全）',
+    fallback.verdict === 'Caution' && fallback.cardTitles.includes('Ingredient list mentions'),
+    JSON.stringify(fallback)
+  );
+  await page.shot('05b-text-fallback');
+
+  // --- 6c. 设备自检页：真机测试与演示前检查都要用 ---
+  await page.evaluate("location.hash = '#/diagnostics'; true");
+  await page.waitFor(
+    "document.querySelectorAll('.diag-row').length > 2 && !/Checking/.test(document.querySelector('.diag-list').textContent)",
+    { label: 'diagnostics rows' }
+  );
+  const diag = await page.evaluate(`
+    (() => {
+      const rows = [...document.querySelectorAll('.diag-row')].map((r) => r.textContent.trim());
+      return {
+        count: rows.length,
+        detector: rows.some((r) => r.includes('BarcodeDetector')),
+        serviceWorker: rows.some((r) => r.includes('Service worker')),
+        offlineProducts: rows.some((r) => r.includes('Products available offline')),
+      };
+    })()
+  `);
+  check(
+    '设备自检页报告条码与离线能力',
+    diag.count >= 8 && diag.detector && diag.serviceWorker && diag.offlineProducts,
+    JSON.stringify(diag)
+  );
+  await page.shot('05c-diagnostics');
+
+  // --- 7. Service Worker + 缓存 ---
   const swState = await page.evaluate(`
     (async () => {
       const reg = await navigator.serviceWorker.getRegistration();
