@@ -7,7 +7,7 @@
 
 ## 演示前 10 分钟检查清单
 
-- [ ] 手机装好 app（Chrome 打开部署地址 → 菜单「安装应用/添加到主屏幕」），**从主屏幕图标启动**，不要从浏览器地址栏进
+- [ ] 手机装好 app：Chrome 打开 **https://mi66666.github.io/safebite/** → 菜单「安装应用/添加到主屏幕」，**从主屏幕图标启动**，不要从浏览器地址栏进
 - [ ] 已登录一个账号，档案里勾好 **Milk + Tree nuts**，自定义关键词加 **coconut**
 - [ ] **Settings → Open device check**：确认全部为 ok（尤其 `BarcodeDetector supported`、`Service worker active`）
 - [ ] Device check → **Test camera**（2 秒）确认真机摄像头可用；再点 **Preload demo products**，必须显示 **3/3 已保存**（这一步防现场断网）

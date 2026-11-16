@@ -3,6 +3,8 @@
 **CS32005 Mobile Application Development — MAB001 Project**
 Yuntian Mi · 2732066 · University of Dundee
 
+**Live app: <https://mi66666.github.io/safebite/>** — open it in Chrome on Android and use *Add to Home screen*.
+
 SafeBite is an installable Progressive Web App that scans a product barcode and checks it
 against **your own** allergy and dietary profile, then tells you — in colour, in words, and
 out loud — whether the product is safe for you.

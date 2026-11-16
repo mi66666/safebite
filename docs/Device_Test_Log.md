@@ -98,6 +98,23 @@ PBKDF2 派生（21 万次迭代）跑在主线程，在降速手机上约需数�
 **校验器自检**：故意移走 `icons/icon-512.png` → 正确报出 2 个问题（预缓存缺失 + manifest 图标不存在）；
 故意从 `sw.js` 预缓存清单删掉 `js/voice.js` → 正确报出"未被预缓存"。
 
+### A6. 线上部署验证 —— 16/16 通过
+
+部署地址：**https://mi66666.github.io/safebite/**
+仓库：<https://github.com/mi66666/safebite>（Pages 源：`main` / `/ (root)`）
+
+| 验证项 | 结果 |
+| --- | --- |
+| 全部静态资源 HTTP 200，MIME 正确（`manifest.json`→`application/json`、`sw.js`→`application/javascript`） | 8/8 |
+| 在**线上地址**跑完整端到端套件（`LIVE_BASE=` 指向公网） | **16/16** |
+| 线上 Service Worker 激活并建立 `safebite-shell-v1.2.0` 缓存 | 通过 |
+| 线上真实 Open Food Facts 查询（Nutella → Avoid: Milk, Tree nuts） | 通过 |
+| 线上模拟断网后外壳仍可打开、已保存商品仍可查 | 通过 |
+| 线上无 console 异常 | 通过 |
+
+这一步的意义：前面所有测试都在本地服务器上跑，而这一步直接打在 `github.io` 的 HTTPS 部署上，
+证明「手机上打开那个网址」这条路本身就是通的。
+
 **CI**：`.github/workflows/verify.yml` 在每次 push 时自动跑上面两步（不需要浏览器，几十秒完成），
 仓库主页会显示绿色对勾；需要 Chrome + CDP 的端到端/无障碍/性能三套留在本地跑。
 
@@ -109,7 +126,7 @@ PBKDF2 派生（21 万次迭代）跑在主线程，在降速手机上约需数�
 
 | # | 步骤 | 预期结果 | 实际结果 | 通过 |
 | --- | --- | --- | --- | --- |
-| B1 | Chrome 打开部署地址 | 显示登录页，无白屏 | | ☐ |
+| B1 | Chrome 打开 **https://mi66666.github.io/safebite/** | 显示登录页，无白屏 | | ☐ |
 | B2 | 菜单 →「安装应用 / 添加到主屏幕」 | 出现安装提示，图标加到桌面 | | ☐ |
 | B3 | 从桌面图标启动 | 独立窗口打开，无地址栏 | | ☐ |
 | B4 | 注册账号（≥8 位含字母数字） | 直接进入扫码页 | | ☐ |

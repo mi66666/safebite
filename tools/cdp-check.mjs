@@ -19,7 +19,10 @@ const OUT = path.resolve(process.argv[3] || 'tmp-shots');
 const CDP_PORT = Number(process.env.CDP_PORT || 9222);
 // GitHub Pages 把站点挂在子路径（/<repo>/）下，用 BASE_PATH 模拟这种部署
 const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/$/, '');
-const BASE = `http://localhost:${PORT}${BASE_PATH}`;
+// LIVE_BASE 直接指向已部署的公网地址，用来验证真实线上站点
+const LIVE_BASE = (process.env.LIVE_BASE || '').replace(/\/$/, '');
+const BASE = LIVE_BASE || `http://localhost:${PORT}${BASE_PATH}`;
+const ORIGIN = LIVE_BASE ? new URL(LIVE_BASE).origin : `http://localhost:${PORT}`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -153,7 +156,7 @@ async function main() {
   // 未关闭的连接阻塞，导致上一轮的登录会话残留、脚本等不到登录页。
   await page.send('Page.navigate', { url: `${BASE}/index.html` });
   await sleep(800);
-  await page.send('Storage.clearDataForOrigin', { origin: `http://localhost:${PORT}`, storageTypes: 'all' });
+  await page.send('Storage.clearDataForOrigin', { origin: ORIGIN, storageTypes: 'all' });
   await sleep(300);
 
   // --- 1. 加载登录页 ---

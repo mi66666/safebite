@@ -5,6 +5,20 @@ Deployment matters for two reasons: the marker's phone needs an **HTTPS** URL (s
 workers and camera access are restricted to secure contexts), and the repository itself is
 the code half of the submission.
 
+## Current deployment
+
+| | |
+|---|---|
+| URL | <https://mi66666.github.io/safebite/> |
+| Repository | <https://github.com/mi66666/safebite> |
+| Source | branch `main`, folder `/ (root)` |
+| Built | GitHub Pages build `built`, HTTPS enforced |
+
+Verified against the live site (not a local server): every asset returns 200 with the
+correct MIME type (`manifest.json` → `application/json`, `sw.js` → `application/javascript`),
+and the full 16-check end-to-end suite passes with `LIVE_BASE=https://mi66666.github.io/safebite`, including
+service-worker activation, a live Open Food Facts lookup and a simulated network outage.
+
 ## 1. Push the repository
 
 ```bash
