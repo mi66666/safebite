@@ -71,7 +71,7 @@
 > "Text scales to 160% and the whole layout derives from that size, so nothing breaks. High contrast mode is black and white. Results are announced through an ARIA live region for screen readers, and every control is at least 44 pixels."
 
 ### 4:35–5:00　收尾：技术决策
-> "Three decisions worth mentioning. It's a PWA, not native — one codebase, installs without an app store, and updates instantly. I use Open Food Facts, which needs no API key: a key-based service failing during a live demo is a real risk I designed out. And it's tested by 29 unit tests plus 14 automated browser checks, including the offline behaviour you just saw."
+> "Three decisions worth mentioning. It's a PWA, not native — one codebase, installs without an app store, and updates instantly. I use Open Food Facts, which needs no API key: a key-based service failing during a live demo is a real risk I designed out. And it's tested by 29 unit tests, 14 automated browser checks including the offline behaviour you just saw, and an automated accessibility audit across light, dark, high-contrast and 160% text that reports zero violations."
 
 ---
 
@@ -82,7 +82,8 @@
 | 为什么不做原生（Kotlin/Swift）？ | 单一代码库 + 免应用商店分发 + 即时更新；本功能集不需要原生独有 API。代价是无法用真正的原生传感器 API，这点我接受。 |
 | 数据安全怎么做的？ | 密码不落盘：PBKDF2-SHA256、21 万次迭代、每用户 16 字节盐、恒定时间比较。过敏档案用 AES-GCM 加密，密钥由密码派生，且以**不可导出**的 `CryptoKey` 存放。摄像头画面只在内存处理，从不上传。 |
 | 数据库错了怎么办？ | 每个结果都有免责声明：配方会变、社区数据可能不全。更重要的是设计上：**没有过敏原数据时返回 Unknown，绝不返回 Safe**。 |
-| 你测试了什么？ | 29 个单元测试（校验位向量、过敏原别名匹配、traces 区分、加密往返、篡改检测）+ 14 项 CDP 自动化端到端（含真断网）+ 真机测试日志。 |
+| 你测试了什么？ | 29 个单元测试（校验位向量、过敏原别名匹配、traces 区分、加密往返、篡改检测）+ 14 项 CDP 自动化端到端（含真断网）+ 无障碍自动审计（15 次页面审计、浅色/深色/高对比/160% 字号各一轮，0 违规，且审计器用注入缺陷自检 5/5）+ 真机测试日志。 |
+| 无障碍怎么验证的？ | 不是靠"我觉得"。审计逐页测量：触控目标 ≥44px、可访问名称、图片 alt、标题层级、WCAG 对比度（普通 4.5:1／大字 3:1，按合成背景计算）、160% 字号下无横向溢出。首次审计抓出 40 处问题（缺 h1、4 个 50×29 的开关、4 个开关没有可访问名称），修完后归零。 |
 | 用了 AI 吗？ | 用了一大篇幅在报告里披露（课程是 Green，允许但要声明）。我会具体说清哪些是 AI 起草、哪些判断是我做的——包括"unknown 不能等于 safe"这条是产品决策。 |
 | 下一步做什么？ | 用 WebAssembly 的 ZXing 扩大浏览器支持；解析配料原文识别隐藏过敏原（如 casein 隐含牛奶）；从历史生成购物清单。 |
 | 数据来源合法性？ | Open Food Facts，ODbL 开放数据库许可，README 和 app 内都注明。 |

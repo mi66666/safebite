@@ -75,6 +75,8 @@ chrome --headless=new --remote-debugging-port=9222 --user-data-dir=/tmp/safebite
 
 ## Deployment (GitHub Pages)
 
+Step-by-step instructions, plus a verification checklist and troubleshooting table, are in [DEPLOY.md](DEPLOY.md).
+
 The app is a static site with no build step, so Pages serves it directly:
 
 1. Push this repository to GitHub.
