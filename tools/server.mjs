@@ -14,8 +14,16 @@ import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = Number(process.argv[2] || process.env.PORT || 5173);
+const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+/** 支持 --root <目录>，用于模拟 GitHub Pages 的子路径部署 */
+function argValue(flag) {
+  const i = process.argv.indexOf(flag);
+  return i > -1 ? process.argv[i + 1] : null;
+}
+
+const ROOT = path.resolve(argValue('--root') || process.env.SERVE_ROOT || DEFAULT_ROOT);
+const PORT = Number(argValue('--port') || process.env.PORT || 5173);
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
