@@ -1,0 +1,16 @@
+{
+  "name": "safebite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Allergen barcode scanner PWA — CS32005 MAB001 project",
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/server.mjs 5173",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "check": "node tools/cdp-check.mjs 5173 tmp-shots",
+    "icons": "python tools/make_icons.py"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
