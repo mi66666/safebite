@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-16T20:36:41.839Z",
+  "generatedAt": "2026-11-16T20:40:05.352Z",
   "total": 0,
   "byRule": {},
   "selftest": {
@@ -98,7 +98,7 @@
       "violations": [],
       "counts": {
         "interactive": 12,
-        "textNodes": 19
+        "textNodes": 18
       }
     },
     {

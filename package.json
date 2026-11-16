@@ -5,8 +5,10 @@
   "description": "Allergen barcode scanner PWA — CS32005 MAB001 project",
   "type": "module",
   "scripts": {
-    "dev": "node tools/server.mjs 5173",
+    "dev": "node tools/server.mjs --port 5173",
     "test": "node --test \"tests/*.test.mjs\"",
+    "static": "node tools/verify-static.mjs",
+    "verify": "node tools/verify-static.mjs && node --test \"tests/*.test.mjs\"",
     "check": "node tools/cdp-check.mjs 5173 tmp-shots",
     "a11y": "node tools/a11y-audit.mjs 5173 docs/Accessibility_Audit.md docs/a11y-audit.json --selftest",
     "perf": "node tools/perf-check.mjs 5173 docs/Performance_Report.md",
@@ -14,6 +16,6 @@
     "icons": "python tools/make_icons.py"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

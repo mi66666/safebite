@@ -32,7 +32,7 @@ Phases: **light**, **dark**, **high-contrast** (forced BT.709-wide palette) and 
 | light / diagnostics | 9 | 40 | 0 |
 | dark / product | 10 | 27 | 0 |
 | dark / settings | 16 | 32 | 0 |
-| high-contrast / scan | 12 | 19 | 0 |
+| high-contrast / scan | 12 | 18 | 0 |
 | high-contrast / product | 10 | 26 | 0 |
 | high-contrast / settings | 16 | 31 | 0 |
 | high-contrast / diagnostics | 9 | 39 | 0 |

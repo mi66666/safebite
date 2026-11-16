@@ -249,7 +249,7 @@ why it is a route rather than a modal.
 | Week | Focus | Outcome |
 |---|---|---|
 | 4 | Project skeleton, manifest, service worker, design tokens | Installable empty shell, offline-capable |
-| 5 | Pure logic: barcode validation, allergen matching, verdict engine + unit tests | 29 unit tests green before any UI exists |
+| 5 | Pure logic: barcode validation, allergen matching, verdict engine + unit tests | 36 unit tests green before any UI exists |
 | 6 | IndexedDB layer, WebCrypto auth, encrypted profile, Open Food Facts client with cache | Real product data renders; login works |
 | 7 | Camera scanning, result/profile/history/settings screens, voice output | Full path usable end to end |
 | 8 | Accessibility pass (text scaling, contrast, ARIA, focus), performance, offline hardening | Audited against the checklist in the brief |
