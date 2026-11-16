@@ -73,8 +73,10 @@ The app is a static site with no build step, so Pages serves it directly:
 3. Open `https://<user>.github.io/<repo>/` in Chrome on Android, then use
    *Install app* / *Add to Home screen*.
 
-`manifest.webmanifest` uses relative URLs (`./`) so it works correctly from a project
-subpath, not just a domain root.
+`manifest.json` uses relative URLs (`./`) so it works correctly from a project subpath, not
+just a domain root. It is named `.json` rather than `.webmanifest` deliberately: GitHub Pages
+does not guarantee an `application/manifest+json` MIME type, and Chrome rejects a manifest
+served with the wrong type — which would silently break "Add to Home screen".
 
 ## Architecture
 
