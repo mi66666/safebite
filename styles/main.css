@@ -411,8 +411,9 @@ main#view {
 }
 
 .btn-sm {
-  min-height: 36px;
-  padding: 0.35rem 0.75rem;
+  /* 触控目标下限 44px：审计发现 36px 不合格，改为 44px 并靠内边距收视觉尺寸 */
+  min-height: var(--tap);
+  padding: 0.35rem 0.85rem;
   font-size: 0.85rem;
 }
 
@@ -454,12 +455,15 @@ main#view {
 }
 
 .icon-btn.small {
-  min-width: 32px;
-  min-height: 32px;
+  min-width: var(--tap);
+  min-height: var(--tap);
   font-size: 0.9rem;
 }
 
 .link-btn {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
   background: none;
   border: none;
   padding: 0.35rem 0;
@@ -979,34 +983,47 @@ input:focus {
   color: var(--primary);
 }
 
+/* 开关：按钮本身保持 44px 高的触控目标，视觉轨道画在伪元素上，
+   这样既满足触控尺寸要求，又不会把轨道画得又粗又笨。 */
 .switch {
   position: relative;
-  width: 3.1rem;
-  height: 1.8rem;
-  min-height: 1.8rem;
-  border-radius: 999px;
-  border: 1.5px solid var(--border);
-  background: var(--surface-2);
-  cursor: pointer;
   flex: none;
+  width: 3.1rem;
+  min-height: var(--tap);
   padding: 0;
-  transition: background-color 140ms ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.switch::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1.8rem;
+  margin-top: -0.9rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  transition: background-color 140ms ease, border-color 140ms ease;
 }
 
 .switch-thumb {
   position: absolute;
   top: 50%;
-  left: 0.2rem;
-  width: 1.3rem;
-  height: 1.3rem;
+  left: 0.3rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: -0.6rem;
   border-radius: 50%;
   background: var(--surface);
   border: 1px solid var(--border);
-  transform: translateY(-50%);
   transition: left 140ms ease;
 }
 
-.switch[aria-checked='true'] {
+.switch[aria-checked='true']::before {
   background: var(--primary);
   border-color: var(--primary);
 }

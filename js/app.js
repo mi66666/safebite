@@ -50,8 +50,10 @@ function navigate(path) {
 function render() {
   const route = parseRoute();
 
-  // 离开扫码页必须释放摄像头
-  if (state.route.name === 'scan' && route.name !== 'scan') stopScanner();
+  // 任何整页重渲染都会替换 <video> 元素，而摄像头流仍绑在旧元素上。
+  // 必须先释放，否则会出现「预览黑屏、但相机指示灯一直亮」——既难用也是隐私问题。
+  stopScanner();
+  state.scanBusy = false;
   state.route = route;
 
   if (!state.session) {
@@ -84,25 +86,33 @@ function render() {
 
 function buildHeader() {
   const titles = { scan: 'SafeBite', product: 'Result', history: 'History', profile: 'My profile', settings: 'Settings' };
+
+  // 语音开关就地更新按钮状态，不触发整页重渲染：
+  // 重渲染会换掉 <video> 元素，而摄像头流仍绑定在旧元素上，
+  // 表现为预览黑屏但相机指示灯常亮。
+  const voiceBtn = el('button', {
+    class: 'icon-btn',
+    type: 'button',
+    'aria-label': getPrefs().voice ? 'Turn voice off' : 'Turn voice on',
+    'aria-pressed': String(getPrefs().voice),
+    title: 'Toggle voice announcements',
+    onClick: async () => {
+      const next = !getPrefs().voice;
+      await setPref('voice', next);
+      voice.setEnabled(next);
+      voiceBtn.textContent = next ? '🔊' : '🔇';
+      voiceBtn.setAttribute('aria-label', next ? 'Turn voice off' : 'Turn voice on');
+      voiceBtn.setAttribute('aria-pressed', String(next));
+      toast(next ? 'Voice announcements on' : 'Voice announcements off');
+    },
+  }, [getPrefs().voice ? '🔊' : '🔇']);
+
   return el('header', { class: 'app-header' }, [
     el('div', { class: 'brand' }, [
       el('span', { class: 'brand-mark', 'aria-hidden': 'true' }, ['🥗']),
       el('span', { class: 'brand-name' }, [titles[state.route.name] || 'SafeBite']),
     ]),
-    el('button', {
-      class: 'icon-btn',
-      type: 'button',
-      'aria-label': getPrefs().voice ? 'Turn voice off' : 'Turn voice on',
-      title: 'Toggle voice announcements',
-      onClick: async () => {
-        const prefs = getPrefs();
-        const next = !prefs.voice;
-        await setPref('voice', next);
-        voice.setEnabled(next);
-        toast(next ? 'Voice announcements on' : 'Voice announcements off');
-        render();
-      },
-    }, [getPrefs().voice ? '🔊' : '🔇']),
+    voiceBtn,
   ]);
 }
 
@@ -289,6 +299,7 @@ function renderScan(target) {
   ]);
 
   target.append(
+    el('h1', { class: 'page-title' }, ['Scan a product']),
     emptyProfile
       ? el('div', { class: 'banner banner-warn' }, [
           el('strong', {}, ['Your profile is empty. ']),
@@ -372,7 +383,7 @@ async function renderProduct(target, barcode) {
     el('section', { class: `verdict ${meta.cls}`, 'aria-label': `Verdict: ${meta.label}` }, [
       el('span', { class: 'verdict-icon', 'aria-hidden': 'true' }, [meta.icon]),
       el('div', {}, [
-        el('p', { class: 'verdict-label' }, [meta.label]),
+        el('h1', { class: 'verdict-label' }, [meta.label]),
         el('p', { class: 'verdict-hint' }, [meta.hint]),
       ]),
       el('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Read result aloud', onClick: () => {
@@ -697,9 +708,15 @@ function renderSettings(target) {
   });
 
   const makeToggle = (label, key, hint) => {
+    const labelId = `setting-${key}`;
     const btn = el('button', {
-      type: 'button', role: 'switch', class: `switch ${prefs[key] ? 'is-on' : ''}`,
+      type: 'button',
+      role: 'switch',
+      class: `switch ${prefs[key] ? 'is-on' : ''}`,
       'aria-checked': String(Boolean(prefs[key])),
+      // 开关里只有装饰性图形，没有任何文本 → 必须显式给出可访问名称，
+      // 否则屏幕阅读器只会读出"按钮"。
+      'aria-labelledby': labelId,
       onClick: async () => {
         const next = btn.getAttribute('aria-checked') !== 'true';
         btn.setAttribute('aria-checked', String(next));
@@ -712,7 +729,10 @@ function renderSettings(target) {
       },
     }, [el('span', { class: 'switch-thumb', 'aria-hidden': 'true' })]);
     return el('div', { class: 'setting-row' }, [
-      el('div', {}, [el('p', { class: 'setting-label' }, [label]), hint ? el('p', { class: 'setting-hint' }, [hint]) : null]),
+      el('div', {}, [
+        el('p', { class: 'setting-label', id: labelId }, [label]),
+        hint ? el('p', { class: 'setting-hint' }, [hint]) : null,
+      ]),
       btn,
     ]);
   };

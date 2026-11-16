@@ -47,18 +47,27 @@ does not — for a phone you need HTTPS (GitHub Pages is used for this project).
 
 ## Tests
 
+Three independent suites, all runnable from a clean checkout:
+
 ```bash
-node --test tests/*.test.mjs          # 29 unit tests (logic + crypto), zero dependencies
-node tools/cdp-check.mjs 5173 shots   # 14 end-to-end checks in a mobile viewport via CDP
+npm test        # 29 unit tests (logic + crypto), zero dependencies, no browser
+npm run check   # 14 end-to-end checks in a 390×844 mobile viewport via CDP
+npm run a11y    # accessibility audit: 15 page-audits across 4 display modes
 ```
 
-The end-to-end script drives a real Chrome session over the DevTools Protocol at a
-390 × 844 viewport and verifies: registration, profile encryption, a live Open Food Facts
-lookup, history persistence, service-worker registration, text-size and contrast settings,
-invalid-barcode handling, and **genuine offline behaviour** (network disabled via
-`Network.emulateNetworkConditions`).
+| Suite | Checks | What it proves |
+|---|---|---|
+| Unit (`tests/`) | 29 passing | GS1 check digits against real products, UPC-A padding, rejected checksums, allergen alias matching (`en:hazelnuts` → tree nuts), traces-vs-contains, dietary flags, AES-GCM round-trip, wrong-key rejection, tamper detection, constant-time compare |
+| End-to-end (`tools/cdp-check.mjs`) | 14 passing | Registration, encrypted profile, live Open Food Facts lookup, history persistence, service worker activation, text scaling, high contrast, invalid barcode handling, and **genuine offline behaviour** (network disabled via `Network.emulateNetworkConditions`) |
+| Accessibility (`tools/a11y-audit.mjs`) | 0 violations | Touch targets ≥ 44 px, accessible names, image alternatives, heading order, landmarks, WCAG contrast (4.5:1 / 3:1), horizontal overflow — measured in light, dark, high-contrast and 160 % text modes |
 
-The DevTools script needs Chrome started with a debugging port:
+The accessibility audit **tests itself**: it injects five known defects (an undersized
+button, a button whose only content is `aria-hidden`, an image with no `alt`, a skipped
+heading level, and 1.15:1 contrast text) and fails the run if any goes undetected. It
+currently detects 5/5 — the first version only caught 4/5, which is how a real false
+negative in the name computation was found.
+
+The end-to-end and audit scripts need Chrome started with a debugging port:
 
 ```bash
 chrome --headless=new --remote-debugging-port=9222 --user-data-dir=/tmp/safebite-cdp

@@ -1,0 +1,159 @@
+{
+  "generatedAt": "2026-11-16T20:24:17.882Z",
+  "total": 0,
+  "byRule": {},
+  "selftest": {
+    "expected": [
+      "target-size",
+      "accessible-name",
+      "img-alt",
+      "heading-order",
+      "contrast"
+    ],
+    "detected": [
+      "target-size",
+      "accessible-name",
+      "img-alt",
+      "heading-order",
+      "contrast"
+    ],
+    "missed": []
+  },
+  "results": [
+    {
+      "phase": "light",
+      "page": "scan",
+      "violations": [],
+      "counts": {
+        "interactive": 12,
+        "textNodes": 19
+      }
+    },
+    {
+      "phase": "light",
+      "page": "product",
+      "violations": [],
+      "counts": {
+        "interactive": 10,
+        "textNodes": 27
+      }
+    },
+    {
+      "phase": "light",
+      "page": "history",
+      "violations": [],
+      "counts": {
+        "interactive": 8,
+        "textNodes": 13
+      }
+    },
+    {
+      "phase": "light",
+      "page": "profile",
+      "violations": [],
+      "counts": {
+        "interactive": 28,
+        "textNodes": 36
+      }
+    },
+    {
+      "phase": "light",
+      "page": "settings",
+      "violations": [],
+      "counts": {
+        "interactive": 15,
+        "textNodes": 31
+      }
+    },
+    {
+      "phase": "dark",
+      "page": "product",
+      "violations": [],
+      "counts": {
+        "interactive": 10,
+        "textNodes": 27
+      }
+    },
+    {
+      "phase": "dark",
+      "page": "settings",
+      "violations": [],
+      "counts": {
+        "interactive": 15,
+        "textNodes": 31
+      }
+    },
+    {
+      "phase": "high-contrast",
+      "page": "scan",
+      "violations": [],
+      "counts": {
+        "interactive": 12,
+        "textNodes": 19
+      }
+    },
+    {
+      "phase": "high-contrast",
+      "page": "product",
+      "violations": [],
+      "counts": {
+        "interactive": 10,
+        "textNodes": 27
+      }
+    },
+    {
+      "phase": "high-contrast",
+      "page": "settings",
+      "violations": [],
+      "counts": {
+        "interactive": 15,
+        "textNodes": 30
+      }
+    },
+    {
+      "phase": "font-160",
+      "page": "scan",
+      "violations": [],
+      "counts": {
+        "interactive": 12,
+        "textNodes": 18
+      }
+    },
+    {
+      "phase": "font-160",
+      "page": "product",
+      "violations": [],
+      "counts": {
+        "interactive": 10,
+        "textNodes": 26
+      }
+    },
+    {
+      "phase": "font-160",
+      "page": "history",
+      "violations": [],
+      "counts": {
+        "interactive": 8,
+        "textNodes": 12
+      }
+    },
+    {
+      "phase": "font-160",
+      "page": "profile",
+      "violations": [],
+      "counts": {
+        "interactive": 28,
+        "textNodes": 35
+      }
+    },
+    {
+      "phase": "font-160",
+      "page": "settings",
+      "violations": [],
+      "counts": {
+        "interactive": 15,
+        "textNodes": 30
+      }
+    }
+  ]
+}
