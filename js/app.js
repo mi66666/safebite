@@ -25,10 +25,12 @@ const state = {
   scanBusy: false,
 };
 
+// 演示用条码：三个都在 Open Food Facts 里有完整数据，且覆盖不同结论。
+// 标签内容按数据库实际字段核对过（不要凭印象写——曾把 Twix 错标成 Snickers）。
 const DEMO_BARCODES = [
-  { code: '3017620422003', label: 'Nutella (contains milk, nuts)' },
-  { code: '5449000000996', label: 'Coca-Cola (no allergens declared)' },
-  { code: '5000159484695', label: 'Snickers (contains milk, peanuts)' },
+  { code: '3017620422003', label: 'Nutella — contains milk and tree nuts' },
+  { code: '5000159484695', label: 'Twix glacé — contains milk, may contain nuts and peanuts' },
+  { code: '5449000000996', label: 'Coca-Cola Original — no allergens declared' },
 ];
 
 /* ---------------------------------------------------------------- 路由 */
