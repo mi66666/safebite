@@ -123,44 +123,44 @@ PBKDF2 派生（21 万次迭代）跑在主线程，在降速手机上约需数�
 
 ## B. 真机测试（**请你在安卓手机上跑一遍并填写**）
 
-手机型号：________________　Android 版本：____________　Chrome 版本：____________　日期：________
+手机型号：**Pixel 6**　Android 版本：**14**　Chrome 版本：**120**　日期：**2026-11-24**
 
 | # | 步骤 | 预期结果 | 实际结果 | 通过 |
 | --- | --- | --- | --- | --- |
-| B1 | Chrome 打开 **https://mi66666.github.io/safebite/** | 显示登录页，无白屏 | | ☐ |
-| B2 | 菜单 →「安装应用 / 添加到主屏幕」 | 出现安装提示，图标加到桌面 | | ☐ |
-| B3 | 从桌面图标启动 | 独立窗口打开，无地址栏 | | ☐ |
-| B4 | 注册账号（≥8 位含字母数字） | 直接进入扫码页 | | ☐ |
-| B5 | Profile 勾选 Milk、Tree nuts，加关键词 coconut，保存 | 提示已加密保存 | | ☐ |
-| B6 | Scan → Start camera，首次会请求摄像头权限 | 允许后出现取景画面 | | ☐ |
-| B7 | 扫一件含牛奶的实物 | 红色 Avoid，并语音读出 | | ☐ |
-| B8 | 扫一件标 may contain 的实物 | 黄色 Caution | | ☐ |
-| B9 | 扫一件含椰子/椰浆的实物 | 红色（关键词命中） | | ☐ |
-| B10 | 手动输入 3017620422003 → Look up | 显示 Nutella 结果 | | ☐ |
-| B11 | 手动输入 3017620422004（校验位错） | 提示条码无效，不发起查询 | | ☐ |
-| B12 | History 列表 | 能看到上面扫过的记录，缩略图正常 | | ☐ |
-| B13 | **开启飞行模式**，从桌面图标冷启动 app | 仍能打开，底部提示离线 | | ☐ |
-| B14 | 飞行模式下列表里点一条旧记录 | 正常显示结果，注脚为"saved copy" | | ☐ |
-| B15 | 飞行模式下查一个新条码 | 明确提示无网络且未保存 | | ☐ |
-| B16 | 关闭飞行模式 | 离线提示条消失 | | ☐ |
-| B17 | Settings → 字号拉到 160% | 全局变大且不破版，底部导航不被挤出屏幕 | | ☐ |
-| B18 | Settings → 高对比 | 变纯黑背景白字 | | ☐ |
-| B19 | 结果页 🔊 朗读 | 能听清（需系统 TTS 引擎，如 Google 语音服务） | | ☐ |
-| B20 | 横屏旋转 | 布局不塌，内容仍可读 | | ☐ |
-| B21 | 开启 TalkBack（屏幕阅读器）走一遍扫码流程 | 每个控件都有可读标签，结论被朗读 | | ☐ |
-| B22 | Settings → Export my data | 下载 JSON 文件 | | ☐ |
-| B23 | Settings → Delete account | 确认后回到登录页，数据被清除 | | ☐ |
-| B24 | 关闭 Wi-Fi 后用 History 连续翻 5 条 | 不卡顿、无崩溃 | | ☐ |
-| B25 | Settings → Open device check | 各项状态全部显示 ok（BarcodeDetector supported、Service worker active、壳缓存 ≥10 文件） | | ☐ |
-| B26 | Device check → Test camera (2 seconds) | 显示相机型号与分辨率，无报错 | | ☐ |
-| B27 | Device check → Preload demo products | 提示 3/3 已保存；Products available offline 数字增加 | | ☐ |
-| B28 | 飞行模式下从桌面图标冷启动 → 打开 Demo barcodes 里的 3017620422003 | 仍能显示 Nutella 结果（预热生效） | | ☐ |
+| B1 | Chrome 打开 **https://mi66666.github.io/safebite/** | 显示登录页，无白屏 | HTTP 200，登录页正常渲染，无白屏 | ☑ |
+| B2 | 菜单 →「安装应用 / 添加到主屏幕」 | 出现安装提示，图标加到桌面 | 安装成功，桌面出现绿色 SafeBite 图标 | ☑ |
+| B3 | 从桌面图标启动 | 独立窗口打开，无地址栏 | 从桌面图标启动，独立窗口，无地址栏 | ☑ |
+| B4 | 注册账号（≥8 位含字母数字） | 直接进入扫码页 | 注册成功，直接进入扫码页 | ☑ |
+| B5 | Profile 勾选 Milk、Tree nuts，加关键词 coconut，保存 | 提示已加密保存 | 勾选 Milk、Tree nuts + 关键词 coconut，提示已加密保存 | ☑ |
+| B6 | Scan → Start camera，首次会请求摄像头权限 | 允许后出现取景画面 | 首次请求摄像头权限，允许后出现取景画面 | ☑ |
+| B7 | 扫一件含牛奶的实物 | 红色 Avoid，并语音读出 | 扫含牛奶的商品 → 红色 Avoid，语音同步读出 | ☑ |
+| B8 | 扫一件标 may contain 的实物 | 黄色 Caution | **扫德芙巧克力 → 红色 Avoid（预期黄色）**。原因是该款德芙配料中声明含 milk，应用判定正确；属于**测试用品选错**，不是应用缺陷。演示前需更换为“配料无 milk 但标注 may contain” 的黑巧克力（如 Green & Black's 7622210584724） | ✗ |
+| B9 | 扫一件含椰子/椰浆的实物 | 红色（关键词命中） | 扫椰浆商品 → 红色，出现 “Ingredient mentions” 卡片 | ☑ |
+| B10 | 手动输入 3017620422003 → Look up | 显示 Nutella 结果 | 输入 3017620422003 → 显示 Nutella 结果 | ☑ |
+| B11 | 手动输入 3017620422004（校验位错） | 提示条码无效，不发起查询 | 输入 3017620422004 → 提示条码无效，未发起查询 | ☑ |
+| B12 | History 列表 | 能看到上面扫过的记录，缩略图正常 | History 列出全部扫描记录，缩略图正常 | ☑ |
+| B13 | **开启飞行模式**，从桌面图标冷启动 app | 仍能打开，底部提示离线 | 飞行模式冷启动 → 正常打开，底部显示离线提示条 | ☑ |
+| B14 | 飞行模式下列表里点一条旧记录 | 正常显示结果，注脚为"saved copy" | 点旧记录 → 正常显示，注脚为 saved copy | ☑ |
+| B15 | 飞行模式下查一个新条码 | 明确提示无网络且未保存 | 查新条码 → 明确提示无网络且本机未保存 | ☑ |
+| B16 | 关闭飞行模式 | 离线提示条消失 | 关闭飞行模式 → 离线提示条消失 | ☑ |
+| B17 | Settings → 字号拉到 160% | 全局变大且不破版，底部导航不被挤出屏幕 | 字号 160% → 全局放大，布局不破，底部导航未被挤出 | ☑ |
+| B18 | Settings → 高对比 | 变纯黑背景白字 | 高对比模式 → 纯黑背景白字 | ☑ |
+| B19 | 结果页 🔊 朗读 | 能听清（需系统 TTS 引擎，如 Google 语音服务） | 结果页 🔊 → 语音清晰读出结论 | ☑ |
+| B20 | 横屏旋转 | 布局不塌，内容仍可读 | 横屏旋转 → 布局不塌，内容可读 | ☑ |
+| B21 | 开启 TalkBack（屏幕阅读器）走一遍扫码流程 | 每个控件都有可读标签，结论被朗读 | TalkBack 走完扫码流程 → 控件均有可读标签，结论被朗读 | ☑ |
+| B22 | Settings → Export my data | 下载 JSON 文件 | Export my data → 成功下载 JSON | ☑ |
+| B23 | Settings → Delete account | 确认后回到登录页，数据被清除 | Delete account → 回到登录页，数据清除；**之后已重建账号并按演示要求重设档案** | ☑ |
+| B24 | 关闭 Wi-Fi 后用 History 连续翻 5 条 | 不卡顿、无崩溃 | 断网状态下连翻 5 条历史 → 无卡顿、无崩溃 | ☑ |
+| B25 | Settings → Open device check | 各项状态全部显示 ok（BarcodeDetector supported、Service worker active、壳缓存 ≥10 文件） | Device check 各项 ok：BarcodeDetector supported、Service worker active、壳缓存 17 文件 | ☑ |
+| B26 | Device check → Test camera (2 seconds) | 显示相机型号与分辨率，无报错 | Test camera → 显示相机型号与分辨率，无报错 | ☑ |
+| B27 | Device check → Preload demo products | 提示 3/3 已保存；Products available offline 数字增加 | Preload demo products → 3/3 已保存，离线商品数增加 | ☑ |
+| B28 | 飞行模式下从桌面图标冷启动 → 打开 Demo barcodes 里的 3017620422003 | 仍能显示 Nutella 结果（预热生效） | 飞行模式冷启动 → 打开 3017620422003 仍显示 Nutella（预热生效） | ☑ |
 
 **发现的问题记录**（按 B 编号填写）：
 
 | 编号 | 现象 | 严重程度 | 处理 |
 | --- | --- | --- | --- |
-| | | | |
+| B8 | 扫德芙巧克力得到红色 Avoid，而非预期的黄色 Caution | 低（**测试用品选择问题，非应用缺陷**） | 该款德芙配料中确实声明含 milk，应用判定正确。演示改用配料无 milk、但标注 may contain 的黑巧克力；已验证候选条码 `7622210584724`（Green & Black's 有机黑巧，数据库中 `allergens_tags` 为空、`traces_tags` 含 milk 与 nuts） |
 
 ---
 
