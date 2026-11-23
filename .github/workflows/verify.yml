@@ -1,0 +1,30 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static-and-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Static consistency (manifest, service worker precache, syntax)
+        run: node tools/verify-static.mjs
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Report summary
+        if: always()
+        run: |
+          echo "### SafeBite verification" >> $GITHUB_STEP_SUMMARY
+          echo "- Static consistency: manifest fields, icons, service worker precache coverage, JS syntax" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit tests: GS1 check digits, allergen matching incl. ingredient-text fallback, AES-GCM round-trip and tamper detection" >> $GITHUB_STEP_SUMMARY
