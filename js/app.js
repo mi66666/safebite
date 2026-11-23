@@ -445,10 +445,24 @@ async function renderProduct(target, barcode) {
   if (getPrefs().voice) voice.speak(speech);
 }
 
+/**
+ * 结果来源说明 —— 必须与实际发生的事一致。
+ * 曾经的真实 bug：抓取失败（status !== 'ok'）时落到了默认分支，
+ * 于是在"没连上网络"的页面上方写着 "Fetched live from Open Food Facts."
+ * —— 这与本应用"绝不谎报"的设计原则直接矛盾。
+ */
 function sourceNote(result) {
-  if (result.source === 'cache' && result.stale) return 'Showing saved copy — offline or unreachable.';
-  if (result.source === 'cache') return 'Loaded from this device’s saved copy.';
-  return 'Fetched live from Open Food Facts.';
+  if (result.status === 'ok') {
+    if (result.source === 'cache') {
+      return result.stale
+        ? 'Showing a saved copy — offline or unreachable.'
+        : 'Loaded from this device’s saved copy.';
+    }
+    return 'Fetched live from Open Food Facts.';
+  }
+  if (result.status === 'offline') return 'Offline — no saved copy of this product.';
+  if (result.status === 'not-found') return 'Checked live — this barcode is not in Open Food Facts.';
+  return 'Could not reach Open Food Facts.';
 }
 
 function buildFindings(assessment) {

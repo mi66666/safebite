@@ -435,6 +435,9 @@ async function main() {
     `document.querySelector('.banner-warn')?.textContent || document.querySelector('.banner-error')?.textContent || document.querySelector('.verdict-label')?.textContent || 'none'`
   );
   check('离线查未保存商品有明确提示', /offline|no connection|not saved/i.test(String(offlineUnknown)), String(offlineUnknown));
+  // 回归检查：曾经这里会显示 "Fetched live from Open Food Facts." —— 明明没连上网络却声称实时获取
+  const offlineNote = await page.evaluate(`document.querySelector('.source-note')?.textContent || ''`);
+  check('离线失败时来源说明不谎称实时获取', !/fetched live/i.test(String(offlineNote)), JSON.stringify(String(offlineNote).trim()));
   await page.shot('10-offline-unknown');
 
   // 恢复网络

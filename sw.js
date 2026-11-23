@@ -9,7 +9,7 @@
  *  - 跨域请求一律直接放行，避免把第三方响应误存进本应用的缓存。
  */
 
-const VERSION = 'v1.2.0';
+const VERSION = 'v1.2.1';
 const SHELL_CACHE = `safebite-shell-${VERSION}`;
 
 const SHELL_ASSETS = [

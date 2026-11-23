@@ -55,7 +55,7 @@ Three independent suites, all runnable from a clean checkout:
 ```bash
 npm run verify  # static consistency + all 36 unit tests (this is what CI runs)
 npm test        # 36 unit tests (logic + crypto), zero dependencies, no browser
-npm run check   # 16 end-to-end checks in a 390×844 mobile viewport via CDP
+npm run check   # 17 end-to-end checks in a 390×844 mobile viewport via CDP
 npm run a11y    # accessibility audit: 18 page-audits across 4 display modes
 npm run perf    # load measurements under 4x CPU throttling and Fast 3G
 ```
@@ -64,7 +64,7 @@ npm run perf    # load measurements under 4x CPU throttling and Fast 3G
 |---|---|---|
 | Static (`tools/verify-static.mjs`) | 0 problems | Manifest fields and icons exist, service worker precache covers every `js/` module, `index.html` wiring, and the syntax of all 22 JS files |
 | Unit (`tests/`) | 36 passing | GS1 check digits against real products, UPC-A padding, rejected checksums, allergen alias matching (`en:hazelnuts` → tree nuts), traces-vs-contains, ingredient-text fallback for entries with no allergen declaration (including coconut-milk and cocoa-butter exclusions), dietary flags, AES-GCM round-trip, wrong-key rejection, tamper detection, constant-time compare |
-| End-to-end (`tools/cdp-check.mjs`) | 16 passing | Registration, encrypted profile, live Open Food Facts lookup, history persistence, the ingredient-text safety fallback, the device-check screen, service worker activation, text scaling, high contrast, invalid barcode handling, and **genuine offline behaviour** (network disabled via `Network.emulateNetworkConditions`) |
+| End-to-end (`tools/cdp-check.mjs`) | 17 passing | Registration, encrypted profile, live Open Food Facts lookup, history persistence, the ingredient-text safety fallback, the device-check screen, service worker activation, text scaling, high contrast, invalid barcode handling, and **genuine offline behaviour** (network disabled via `Network.emulateNetworkConditions`) |
 | Accessibility (`tools/a11y-audit.mjs`) | 0 violations | Touch targets ≥ 44 px, accessible names, image alternatives, heading order, landmarks, WCAG contrast (4.5:1 / 3:1), horizontal overflow — measured in light, dark, high-contrast and 160 % text modes |
 | Performance (`tools/perf-check.mjs`) | measured | first contentful paint 1.26 s cold / 72 ms warm under 4× CPU throttling and Fast 3G, 119 KB transferred |
 
